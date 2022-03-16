@@ -1,8 +1,13 @@
 const express = require('express');
+const consign = require('consign');
 
 const app = express();
 
+consign()
+    .include('controllers')
+    .into(app)
+
 app.listen(3000, () => console.log('Servidor rodadndo  na porta 3000'));
 
-app.get('/atendimentos', (req, res) => res.send("Servidor rodando, voce sera atendido, ok!"));            
+
 
