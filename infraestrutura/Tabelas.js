@@ -10,7 +10,9 @@ class Tabelas{
             ID INT PRIMARY KEY AUTO_INCREMENT,
             CLIENTE VARCHAR(50) NOT NULL,
             PET VARCHAR(20) NOT NULL,
-            OBSERVACOES TEXT
+            OBSERVACOES TEXT,
+            DATA DATETIME NOT NULL,
+            DATACRIACAO DATETIME NOT NULL
         )`;
 
         this.conexao.query(sql, erro => {
