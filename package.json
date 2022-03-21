@@ -1,0 +1,27 @@
+{
+  "name": "apirest-node-mongo",
+  "version": "1.0.0",
+  "description": "",
+  "main": "./src/index.js",
+  "scripts": {
+    "start": "nodemon",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Alyson02/ApiRest-Node-MySql.git"
+  },
+  "author": "Alyson",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Alyson02/ApiRest-Node-MySql/issues"
+  },
+  "homepage": "https://github.com/Alyson02/ApiRest-Node-MySql#readme",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "body-parser": "^1.19.2",
+    "mongoose": "^6.2.7",
+    "nodemon": "^2.0.15",
+    "xpress": "^2.4.6"
+  }
+}
