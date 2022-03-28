@@ -4,10 +4,11 @@ const bodyparser = require('body-parser')
 const app = new express()
 const faker = require('faker')
 
-app.use(bodyparser())
+app.use(express.json())
+app.use(express.urlencoded({ extended: true}))
 
 app.get('/:cpf', (req, res) => {
-    const { cpf } = req.params
+    const {cpf} = req.params
 
     res.status(200).json({
         cpf,

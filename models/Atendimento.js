@@ -1,68 +1,94 @@
-const conexao = require('../infraestrutura/conexao')
+const conexao = require('../infraestrutura/database/conexao')
 const moment = require('moment');
+const axios = require('axios')
+const repositorio = require('../repository/atendimento')
 
 class Atendimento{
-    adiciona(atendimento, res){
-        const dataCriacao = moment().format('YYYY-MM-DD HH:mm:ss');
-        const data = moment(atendimento.data, 'DD/MM/YYYY').format('YYYY-MM-DD HH:mm:ss');
+    constructor(){
+        this.dataEhValida = (DATA, dataCriacao) => {
+            moment(DATA).isSameOrAfter(dataCriacao);
+        }
+        this.clienteEhValido = tamanho => tamanho >= 5;
 
-        const dataEhValida = moment(data).isSameOrAfter(dataCriacao);
-        const clienteEhValido = atendimento.Cliente.length >= 5;
+        this.valida = parametros => this.validacoes.filter(campo =>{
+            const {nome} = campo;
+            const {parametro} = parametros[nome];
 
-        const validacoes = [
+            return !campo.valido(parametro);
+        })
+
+        this.validacoes = [
             {
                 nome: 'data',
-                valido: dataEhValida,
+                valido: this.dataEhValida,
                 mensagem: 'Data deve ser maior ou igual a atual'
             },
             {
                 nome: 'cliente',
-                valido: clienteEhValido,
+                valido: this.clienteEhValido,
                 mensagem: 'Cliente deve ter pelo menos cinco caracteres'
             }
         ]
+    }
+    adiciona(atendimento){
+        const dataCriacao = moment().format('YYYY-MM-DD HH:mm:ss');
+        const DATA = moment(atendimento.DATA, 'DD/MM/YYYY').format('YYYY-MM-DD HH:mm:ss');
 
-        const erros = validacoes.filter(campo => !campo.valido);
+        const parametros = {
+            data: {DATA, dataCriacao},
+            cliente: { tamanho: atendimento.CLIENTE.length}
+        }
+
+        const erros = this.valida(parametros);
         const existemErros = erros.length;
 
         if(existemErros)
-            res.status(400).json(erros);
+            return new Promise((resolve, reject) => reject({erros}))
         else{
-            const atendimentoDatado = {...atendimento, dataCriacao, data}
+            const atendimentoDatado = {...atendimento, dataCriacao, DATA}
 
-            const sql = "INSERT INTO ATENDIMENTOS SET ?";
+/*Forma mais simples, desaclopada (cada um com sua função, usando promises, ***repare no 'then')*/
 
-            conexao.query(sql, atendimentoDatado, (erro, resultados) =>
+            return repositorio.adiciona(atendimentoDatado).then(resultados =>{
+                const id = resultados.insertId
+                return { ...atendimento, id }
+            });
+
+
+/*Jeito acoplado e sem o uso de promises(jeito asyncrono de passar informaçoes inacessiveis de metodo)*/ 
+
+            /*conexao.query(sql, atendimentoDatado, (erro, resultados) =>
             {
                 if(erro)
                     res.status(400).json(erro);
-                else
-                    res.status(201).json(atendimento);
-            })
+                else{
+                    const id = resultados.insertId
+                    res.status(201).json({atendimento, id});
+                }
+            })*/
         }
     }
 
-    lista(res){
-        const sql = "SELECT * FROM ATENDIMENTOS"
-
-        conexao.query(sql, (erro, resultados) => {
-            if(erro)
-                res.status(400).json(erro);
-            else
-                res.status(200).json(resultados);
-        });
+    lista(){
+        return repositorio.lista()
     }
 
     getById(id, res){
         const sql = `SELECT * FROM ATENDIMENTOS WHERE ID = ${id}`;
 
-        conexao.query(sql, (erro, resultados) => {
+        conexao.query(sql, async (erro, resultados) => {
             const atendimento = resultados[0];
+            const cpf = atendimento.CLIENTE;
 
             if(erro)
                 res.status(400).json(erro);
-            else
-                res.status(200).json(atendimento);
+            else{
+                const { data } = await axios.get(`http://localhost:8082/${cpf}`);
+
+                atendimento.CLIENTE = data;
+
+                res.status(200).json({atendimento});
+            }
         })
     }
 
